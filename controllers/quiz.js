@@ -225,3 +225,73 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+
+
+exports.randomplay = (req, res, next) => {//aqui estas haciendo una funcion llamada ranmoplay q se va a exportar con los parametros req res y next
+
+    req.session.alreadyPlayed = req.session.alreadyPlayed || [];//creamos el array en el que ponemos los id de las que ya se han juagdo
+    
+    const score = req.session.alreadyPlayed.length;
+
+    const whereOpt = {id: {[Sequelize.Op.notIn] : req.session.alreadyPlayed}} ;
+
+    models.quiz.count({where:whereOpt})
+   .then(count => {
+       return models.quiz.findAll({
+            where: whereOpt,//encuentrame los que cumplan whereopt
+            offset: Math.floor(Math.random()*count),
+            limit: 1
+         })
+
+       .then(quizzes => {
+            return quizzes[0];
+        })
+   })
+
+    .then(quiz => {
+        if(quiz === undefined) {
+            req.session.alreadyPlayed = [];
+            res.render('quizzes/random_nomore', {
+                score: score
+            });
+        } else {
+            res.render('quizzes/random_play', {
+                quiz: quiz,
+                score: score
+            });
+        }
+    })
+
+    .catch(error => next(error));
+
+};
+
+
+
+exports.randomcheck = (req, res, next) => {
+    try{
+    const {quiz, query} = req;
+    req.session.alreadyPlayed = req.session.alreadyPlayed || [];
+
+    const answer = query.answer || "";
+    const right_answer = quiz.answer;
+
+    const result = answer.toLowerCase().trim() === right_answer.toLowerCase().trim();
+
+    if (result){
+        if(req.session.alreadyPlayed.indexOf(req.quiz.id) === -1){ 
+            req.session.alreadyPlayed.push(req.quiz.id);
+        }
+    } 
+
+    const score = req.session.alreadyPlayed.length;
+
+    if(!result){
+        req.session.alreadyPlayed = [];
+    }
+
+    res.render('quizzes/random_result', {answer, result, score});
+    } catch (error){
+        next(error);
+    }
+}
