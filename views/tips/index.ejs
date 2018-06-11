@@ -12,16 +12,7 @@
 
             <li>
 
-                <% if (accepted) { %>
-                    <%= tip.text %>
-                <% } %>
-
-                <% if (!accepted && isAdmin) { %>
-                    <%= tip.text %>
-                    <a href="/quizzes/<%= quizId %>/tips/<%= tip.id %>/accept?_method=PUT">
-                    <button>Accept</button>
-                <% } %>
-
+                <%= tip.text %>
 
                 <span class = "autor"> (by <%= tip.author ? tip.author.username : "Anonymous" %>)</span>
 
